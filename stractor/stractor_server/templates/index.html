@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="utf-8" />
+ <meta http-equiv="X-UA-Compatible" content="IE=edge">
+ <title>Index</title>
+ <meta name="viewport" content="width=device-width", initial-scale=1>
+ <script type="text/javascript">
+
+  let socket = new WebSocket("ws://192.168.1.38:8001")
+
+  socket.onopen = function() {
+    socket.send("[ctl] helo")
+  }
+
+  socket.onmessage = function(evt) {
+    let msg = evt.data;
+
+    opcode = msg.charAt(0);
+    payload = msg.substring(2, msg.length);
+
+    switch(opcode)
+    {
+      case '2':
+        Display(payload);
+      case '7':
+        break;
+    }
+  }
+
+  socket.onclose = function(evt)
+  {
+    status = "CONNECTION DIED"
+    if(evt.wasClean)
+    {
+      status = "CONNECTION CLOSED"
+    }
+
+    document.getElementById("recv").innerHTML = status
+  }
+
+  function Refresh()
+  {
+    socket.send("[ctl] refr");
+  }
+
+  function Com(msg)
+  {
+    socket.send(msg);
+  }
+
+  function WHIP()
+  {
+    socket.send("[ctl] whip");
+  }
+
+  window.setInterval(function(){
+    Refresh();
+  }, 1000);
+
+  function Display(msg)
+  {
+    anchor = document.getElementById("recv");
+    data = JSON.parse(msg);
+
+    // template = "<p>Slave#1:<br/>&nbsp&nbsp&nbsp&nbsp|-- idx: <a>18</a><br/>&nbsp&nbsp&nbsp&nbsp|-- end: 87</a></p>"
+    p1 = "<p>Slave#"
+    p2 = ":<br/>&nbsp&nbsp&nbsp&nbsp|-- idx: "
+    p3 = "<br/>&nbsp&nbsp&nbsp&nbsp|-- start: "
+    p4 = "<br/>&nbsp&nbsp&nbsp&nbsp|-- end: "
+    p5 = "</p>"
+
+    hud = ""
+
+    for(var i=0; i < data.length; i++)
+    {
+      var slave = data[i];
+      hud += p1
+      hud += slave['id']
+      hud += p2
+      hud += slave['apk']['idx']
+      hud += p3
+      hud += slave['apk']['idx_min']
+      hud += p4
+      hud += slave['apk']['idx_max']
+      hud += p5
+    }
+
+    anchor.innerHTML = hud
+  }
+
+ </script>
+</head>
+<body>
+ <h1>Stractor Server</h1>
+ <button onclick="alert('not implemented')">Cmd1</button>
+ <button onclick="WHIP()">WHIP</button>
+ <div id="recv">NEED CONNECTION</div>
+</body>
+</html>
